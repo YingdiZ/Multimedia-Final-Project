@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Recommendation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <h1>Recipe Recommendation</h1>
+            <!-- <div class="navbar">
+                <nav>
+                    <a href="#">Home</a>
+                    <a href="#">Recipe Recommendation</a>
+                </nav>
+            </div> -->
+        </header>
+
+        <!-- Main Content Section -->
+        <main>
+            <section class="upload-section">
+                <p>Welcome to upload refrigerator photos!</p>
+                
+                <!-- File Input for Uploading Image -->
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;width: 100%; height: 250px; border-radius: 8px;" onchange="handleImageUpload(event)">
+                <button class="upload-btn" onclick="document.getElementById('imageUpload').click()">Upload Button</button>
+                <button class="reupload-btn" onclick="document.getElementById('imageUpload').click()">Reupload</button>
+            </section>
+
+            <!-- Uploaded Picture Preview Section -->
+            <section class="preview-section">
+                <div class="photo-preview" id="photoPreview">
+                    <p>Photo preview</p>
+                </div>
+            </section>
+
+            <!-- Recognized Ingredients Section -->
+            <section class="recipes-section">
+                <h1>Recognized Ingredients</h1>
+                <button class="reupload-btn" onclick="fetchIngredientsWithPolling()">Recognize Ingredients</button>
+                <div id="waitingContainer"></div>
+                <ul id="ingredientsList">
+                    <!-- Ingredients will be added here dynamically -->
+                </ul>
+            </section>
+
+
+            <!-- Recognition Result Picture Section -->
+            <section class="result-picture-section">
+                <!-- <h1>Recognition Result</h1> -->
+                <div class="result-picture-preview" id="resultPicturePreview">
+                    <p>No recognition result available yet.</p>
+                </div>
+            </section>
+
+            <!-- Recommended Recipes Section -->
+            <section class="recipes-section">
+                <h1>Recommended Recipes</h1> 
+                <button class="reupload-btn" onclick="generateRecipes()">Generate Recipes</button>
+                <ul id="recipesList">
+                    <!-- Recipes will be added here dynamically -->
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Simulated list of ingredients and recipes for demonstration
+        const mockIngredients = ["Eggs", "Tomato", "Potato"];
+        const mockRecipes = [
+            { name: "Egg Tomato Stir-Fry", ingredients: ["Eggs", "Tomato"], steps: "1. Beat eggs. 2. Stir-fry with tomato." },
+            { name: "Potato Salad", ingredients: ["Potato"], steps: "1. Boil potatoes. 2. Mix with mayonnaise and seasonings." },
+            { name: "Omelette", ingredients: ["Eggs", "Potato"], steps: "1. Beat eggs. 2. Add potato and cook in a pan." }
+        ];
+
+        let imageId = null; // Unique ID for the uploaded image
+        let ingredients = []; // Recognized ingredients
+
+        let pollingInterval = 5000; // polling interval in milliseconds
+        let maxPollingAttempts = 12; // maximum number of polling attempts before giving up
+        let currentPollingAttempts = 0; // current number of polling attempts
+        let waitingMessage = null; // message to display while waiting for results
+
+        // Handle image upload and preview display
+        // function handleImageUpload(event) {
+        //     const file = event.target.files[0];
+        //     if (file) {
+        //         const reader = new FileReader();
+        //         reader.onload = function(e) {
+        //             document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" alt="Uploaded Photo" style="width: 100%; height: auto;">`;
+        //             recognizeIngredients();  // Simulate ingredient recognition after image upload
+        //         };
+        //         reader.readAsDataURL(file);
+        //     }
+        // }
+
+        async function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            // Show the image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" alt="Uploaded Photo" style="width: 100%; height: 500px;">`;
+            };
+            reader.readAsDataURL(file);
+            console.log("uploading image");
+            // console.log(file);
+
+            imageId = Date.now(); // 使用时间戳生成唯一 ID
+            console.log("Generated image_id:", imageId);
+
+            // Prepare the image file for the API request
+            const formData = new FormData();
+            formData.append("image", file);
+            formData.append("image_id", imageId)
+
+            try {
+                // Send the image to the backend API
+                const response = await fetch("http://127.0.0.1:5000/api/upload_image", {
+                    method: "POST",
+                    body: formData
+                });
+
+                // Check if the request was successful
+                if (response.ok) {
+                    console.log("Image uploaded successfully");
+                } else {
+                    console.error("Failed to upload image:", response.statusText);
+                    alert("Failed to upload image. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error uploading image:", error);
+                alert("Error uploading image. Please check your network connection.");
+                }
+            }
+        }
+
+        // Simulate ingredient recognition and display them
+        function fetchIngredients_origin() {
+            if (!imageId) {
+                alert("Please upload an image first."); // make sure an image is uploaded before recognizing ingredients
+                return;
+            }
+            const ingredients = []
+            try {
+                // Send the image to the backend API
+                imageId='001';
+                const response = fetch(`/api/get_ingredients_results?image_id=${imageId}`);
+                if (response.ok) {
+                    const data = response.json();
+                    ingredients = data.ingredients || [];
+                    displayIngredients();
+                } else {
+                    console.error("Failed to fetch ingredients.");
+                    alert("Failed to fetch ingredients. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error fetching ingredients:", error);
+                alert("An error occurred while fetching ingredients.");
+            }
+
+        }
+
+        // Update the recognition result picture
+        function updateResultPicture(imageData) {
+            const resultPicturePreview = document.getElementById('resultPicturePreview');
+
+            if (imageData) {
+                resultPicturePreview.innerHTML = `<img src="${imageData}" alt="Recognition Result" style="width: 100%; height: 600px; border-radius: 8px;">`;
+            } else {
+                resultPicturePreview.innerHTML = `<p>No recognition result available yet.</p>`;
+            }
+        }
+
+        async function fetchIngredientsWithPolling() {
+            if (!imageId) {
+                alert("Image ID not found. Please upload an image first.");
+                return;
+            }
+
+            // show waiting message
+            showWaitingMessage();
+
+            const fetchIngredients = async () => {
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/api/get_ingredients_results?image_id=${imageId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.ingredients && data.ingredients.length > 0) {
+                            console.log("Ingredients fetched successfully:", data.ingredients);
+                            ingredients = data.ingredients;
+                            displayIngredients(ingredients); 
+                            removeWaitingMessage(); // remove waiting message
+
+                            if (data.photo_file) {
+                                const resultImage = `data:image/png;base64,${data.photo_file}`;
+                                updateResultPicture(resultImage);
+                            } else {
+                                console.error("No recognition result available.");
+                                updateResultPicture(null);
+                            }
+                            return; // stop polling
+                        }
+                    } else {
+                        console.error("Failed to fetch ingredients:", response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Error fetching ingredients:", error);
+                }
+
+                // if polling attempts have reached the maximum, give up
+                currentPollingAttempts++;
+                if (currentPollingAttempts >= maxPollingAttempts) {
+                    alert("Fetching ingredients timed out. Please try again later.");
+                    removeWaitingMessage(); // remove waiting message
+                    return;
+                }
+
+                // if polling attempts have not reached the maximum, try again
+                setTimeout(fetchIngredients, pollingInterval);
+            };
+
+            fetchIngredients(); // Start the polling loop
+        }
+
+        function displayIngredients(ingredients) {
+            const ingredientsList = document.getElementById('ingredientsList');
+            ingredientsList.innerHTML = ''; // Clear existing list
+
+            console.log(ingredients);
+            ingredients.forEach(ingredient => {
+                const listItem = document.createElement('li');
+                console.log(ingredient);
+                // Add edit and delete buttons with respective event handlers
+                listItem.innerHTML = `
+                    ${ingredient} 
+                    <button class="edit-btn" onclick="editIngredient('${ingredient}')">Edit</button>
+                    <button class="delete-bt" onclick="deleteIngredient('${ingredient}')">Delete</button>
+                `;
+                ingredientsList.appendChild(listItem);
+            });
+        }
+
+        function showWaitingMessage() {
+            const container = document.getElementById("waitingContainer");
+            if (!waitingMessage) {
+                waitingMessage = document.createElement("p");
+                waitingMessage.id = "waitingMessage";
+                waitingMessage.textContent = "Waiting for ingredients recognition... Please wait.";
+                container.appendChild(waitingMessage);
+            }
+        }
+
+        function removeWaitingMessage() {
+            if (waitingMessage) {
+                waitingMessage.remove();
+                waitingMessage = null;
+            }
+        }
+
+        // <button class="delete-bt" onclick="deleteIngredient('${ingredient}')">Delete</button>
+        function deleteIngredient(ingredient) {
+            ingredients = ingredients.filter((ing) => ing !== ingredient);
+            displayIngredients(ingredients);
+        }
+
+        // Delete ingredient function
+      
+        // <button class="delete-btn" onclick="deleteIngredient(this)">Delete</button>
+        // function deleteIngredient(button) {
+        //     const listItem = button.parentElement; // Get the <li> element
+        //     listItem.remove(); // Remove the list item from the DOM
+
+        // }
+
+
+        // Simulate editing an ingredient
+        function editIngredient(ingredient) {
+            const newIngredient = prompt("Edit ingredient:", ingredient);
+            if (newIngredient) {
+                // Replace ingredient in mockIngredients for demo purposes
+                const index = ingredients.indexOf(ingredient);
+                if (index > -1) {
+                    ingredients[index] = newIngredient;
+                    displayIngredients(ingredients); // Refresh ingredient list
+                }
+            }
+        }
+
+        // Simulate recipe generation based on recognized ingredients
+        async function generateRecipes() {
+            if (ingredients.length === 0) {
+                alert("No ingredients available to generate recipes.");
+                return;
+            }
+            const recipes = []
+  
+            try {
+                // Send the image to the backend API
+                const response =  await fetch("http://127.0.0.1:5000/api/get_recipe_results", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ingredients }),
+                });
+
+                // Check if the request was successful
+                if (response.ok) {
+                    console.log("Recipes generated successfully");
+                    const data = await response.json();
+                    displayRecipes(data.recipes);
+                } else {
+                    console.error("Failed to fetch recipes.");
+                    alert("Failed to fetch recipes. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error fetching recipes:", error);
+                alert("An error occurred while fetching recipes.");
+            }
+            
+        }
+
+        // function displayRecipes(recipes) {
+        //     console.log(recipes);
+        //     const recipesList = document.getElementById('recipesList');
+        //     recipesList.innerHTML = ''; // Clear existing list
+        //     recipes.forEach(recipe => {
+        //         const listItem = document.createElement('li');
+
+        //         const stepsText = recipe.steps.map(stepObj => stepObj.step).join(" ");
+
+        //             listItem.innerHTML = `<strong>${recipe.name}</strong><br><br>Ingredients: ${recipe.ingredients.join(", ")}<br>Steps: ${stepsText.replace(/\n/g, "<br>")}`;
+        //             recipesList.appendChild(listItem);
+        //     });
+        //  }
+        function displayRecipes(recipes) {
+            console.log(recipes);
+            const recipesList = document.getElementById('recipesList');
+            recipesList.innerHTML = ''; // Clear existing list
+
+            recipes.forEach(recipe => {
+                const listItem = document.createElement('li');
+                listItem.style.marginBottom = "20px"; // Add spacing between recipes
+
+                // Format ingredients as a bullet list
+                const ingredientsList = recipe.ingredients
+                    .map(ingredient => `<li>${ingredient}</li>`)
+                    .join("");
+
+                // Format steps as a numbered list
+                const stepsList = recipe.steps
+                    .map((stepObj, index) => `<li>${index + 1}. ${stepObj.step}</li>`)
+                    .join("");
+
+                // Add structured content to the recipe item
+                listItem.innerHTML = `
+                    <h2 style="color: #FF7F50; font-family: Arial, sans-serif;">${recipe.name}</h2>
+                    <h3 style="margin-bottom: 5px;padding-left: 10px;">Ingredients:</h3>
+                    <ul style="padding-left: 20px; margin-bottom: 10px;">${ingredientsList}</ul>
+                    <h3 style="margin-bottom: 5px;padding-left: 10px;">Steps:</h3>
+                    <ol style="padding-left: 20px;">${stepsList}</ol>
+                `;
+
+                recipesList.appendChild(listItem);
+            });
+        }
+
+
+
+    </script>
+</body>
+</html>

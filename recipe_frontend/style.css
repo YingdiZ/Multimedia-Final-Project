@@ -1,0 +1,247 @@
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    background-color: #f9f9f9;
+}
+
+.container {
+    /* max-width: 900px; Constrain width to a more readable size */
+    width: 100%;
+    margin: 5px;
+    padding: 5px;
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Header Section */
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 2em;
+    color: #333;
+}
+
+.navbar {
+    margin-top: 10px;
+}
+
+.navbar nav {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.navbar a {
+    color: #333;
+    text-decoration: none;
+    font-size: 1em;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+/* Main Content Sections */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Upload Section */
+.upload-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.upload-section p {
+    font-size: 1.1em;
+    color: #666;
+}
+
+.upload-section .upload-btn,
+.upload-section .reupload-btn {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.upload-section .reupload-btn {
+    background-color: #FFA500;
+}
+
+.upload-section .upload-btn:hover,
+.upload-section .reupload-btn:hover {
+    opacity: 0.9;
+}
+
+/* Photo Preview Section */
+.preview-section{
+    width: 100%;
+    max-width: 600px;
+    margin: 20px 0;
+}
+.photo-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    /* max-width: 500px; */
+    height: 500px;
+    background-color: #e0e0e0;
+    color: #aaa;
+    margin: 20px 0;
+    border-radius: 8px;
+    /* overflow: hidden; */
+}
+
+.photo-preview img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    margin: 20px 0;
+}
+
+
+/* Recognition Result Section */
+.result-picture-section {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.result-picture-section h1 {
+    font-size: 1.5em;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.result-picture-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 600px;
+    background-color: #e0e0e0;
+    color: #aaa;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.result-picture-preview img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+/* Ingredients and Recipes Section */
+.recipes-section {
+    width: 100%;
+    max-width: 800px;
+    /* padding: 20px; */
+    margin: 20px 0;
+    text-align: left;
+}
+
+.recipes-section h1 {
+    font-size: 1.5em;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.recipes-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.recipes-section ul li {
+    font-size: 1.1em;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.recipes-section .edit-btn {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    color: #fff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.recipes-section .edit-btn:hover {
+    opacity: 0.9;
+}
+
+.reupload-btn {
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #FFA500;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.reupload-btn:hover {
+    opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        margin: 10px;
+    }
+
+    header h1 {
+        font-size: 1.8em;
+    }
+
+    .navbar nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .upload-section .upload-btn,
+    .upload-section .reupload-btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+
+    .photo-preview {
+        height: 200px;
+    }
+
+    .recipes-section h1 {
+        font-size: 1.3em;
+    }
+
+    .recipes-section ul li {
+        font-size: 1em;
+    }
+}
